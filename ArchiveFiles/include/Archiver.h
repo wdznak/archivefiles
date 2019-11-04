@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <iostream>
 #include <map>
 #include <string>
@@ -11,31 +12,33 @@ namespace ArchiveFiles {
 
 class ArchiverPC : public SevenZip::ProgressCallback
 {
+private:
+	std::atomic<bool> cancelComp_ = false;
+
 public:
 	void OnStartWithTotal(const SevenZip::TString& archivePath, unsigned __int64 totalBytes) override {
-		std::cout << "Cos sie dzieje\n"
-			<< archivePath << "\n"
-			<< totalBytes << "\n";
+		std::cout << "Start compressing: " << archivePath << " of total size: "	<< totalBytes << "\n";
 	}
 
 	void OnProgress(const SevenZip::TString& archivePath, unsigned __int64 bytesCompleted) override {
-		std::cout << "Robimy Progress!\n"
-			<< archivePath << "\n"
-			<< bytesCompleted << "\n";
+		std::cout <<  archivePath << " complited: " << bytesCompleted << "\n";
 	}
 
 	void OnDone(const SevenZip::TString& archivePath) override {
-		std::cout << "On Done!\n";
+		std::cout << "Data has been compressed!\n";
 	};
 
 	void OnFileDone(const SevenZip::TString& archivePath, const SevenZip::TString& filePath, unsigned __int64 bytesCompleted) override {
-		std::cout << "On File Done!\n";
+		std::cout << "File has been compressed!\n";
 	};
 
 	bool OnCheckBreak() override {
-		std::cout << "On Check Break!\n";
-		return false;
+		return cancelComp_;
 	};
+
+	void cancelCompressing() {
+		cancelComp_ = true;
+	}
 };
 
 class Archiver
